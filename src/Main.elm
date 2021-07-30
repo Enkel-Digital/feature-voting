@@ -22,6 +22,7 @@ main =
 type alias Feature =
     { title : String
     , description : String
+    , points : Int
     }
 
 
@@ -38,13 +39,13 @@ init =
     Model ""
         ""
         ""
-        [ { title = "faster loading time", description = "right now the first load takes very long" }
-        , { title = "search for item using itemID too", description = "right now can only search using item name and not item ID" }
+        -- Scaffolded values to test UI
+        [ { title = "faster loading time", description = "right now the first load takes very long", points = 0 }
+        , { title = "search for item using itemID too", description = "right now can only search using item name and not item ID", points = 2 }
         ]
 
 
 
--- Scaffolded values to test UI
 -- UPDATE
 
 
@@ -92,7 +93,8 @@ viewFeatures features =
 viewFeature : Feature -> Html msg
 viewFeature feature =
     div []
-        [ text feature.title
+        [ p [] [ text (toString feature.points ++ " points") ]
+        , text feature.title
         , hr [] []
         , text feature.description
         ]

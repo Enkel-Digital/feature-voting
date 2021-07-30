@@ -1,9 +1,11 @@
 module Main exposing (..)
 
 import Browser
+import Debug exposing (toString)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput)
+import Select exposing (fromValuesWithLabels)
 
 
 
@@ -53,6 +55,15 @@ type Msg
     = Name String
     | Password String
     | PasswordAgain String
+    | SortFeatures SortMethod
+
+
+type SortMethod
+    = SortByUnsorted
+    | SortByVotesMost
+    | SortByVotesLeast
+    | SortByTimeLatest
+    | SortByTimeOldest
 
 
 update : Msg -> Model -> Model
@@ -67,6 +78,26 @@ update msg model =
         PasswordAgain password ->
             { model | passwordAgain = password }
 
+        SortFeatures sortMethod ->
+            { model
+                | features =
+                    case sortMethod of
+                        SortByUnsorted ->
+                            model.features
+
+                        SortByVotesMost ->
+                            List.reverse (List.sortBy .points model.features)
+
+                        SortByVotesLeast ->
+                            List.sortBy .points model.features
+
+                        SortByTimeLatest ->
+                            Debug.todo "Not yet implemented"
+
+                        SortByTimeOldest ->
+                            Debug.todo "Not yet implemented"
+            }
+
 
 
 -- VIEW
@@ -76,6 +107,15 @@ view : Model -> Html Msg
 view model =
     div []
         [ h1 [] [ text "All features" ]
+        , fromValuesWithLabels
+            [ ( SortByUnsorted, "-- Sort --" )
+            , ( SortByVotesMost, "Votes (Most)" )
+            , ( SortByVotesLeast, "Votes (Least)" )
+            , ( SortByTimeLatest, "Time (Latest)" )
+            , ( SortByTimeOldest, "Time (Oldest)" )
+            ]
+            SortByUnsorted
+            SortFeatures
         , viewFeatures model.features
         , viewInput "text" "Name" model.name Name
         , viewInput "password" "Password" model.password Password

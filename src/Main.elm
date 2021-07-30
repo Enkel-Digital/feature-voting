@@ -24,12 +24,15 @@ type alias Model =
   { name : String
   , password : String
   , passwordAgain : String
+  
+  , features : List String
   }
 
 
 init : Model
 init =
-  Model "" "" ""
+  Model "" "" "" ["faster loading time", "search for item using itemID too"]
+-- Scaffolded values to test UI
 
 
 
@@ -62,11 +65,19 @@ update msg model =
 view : Model -> Html Msg
 view model =
   div []
-    [ viewInput "text" "Name" model.name Name
+    [ h1 [] [ text "All features" ]
+    , viewFeatures model.features
+    , viewInput "text" "Name" model.name Name
     , viewInput "password" "Password" model.password Password
     , viewInput "password" "Re-enter Password" model.passwordAgain PasswordAgain
     , viewValidation model
     ]
+
+
+viewFeatures : List String -> Html msg
+viewFeatures features =
+  ol []
+    (List.map (\feature -> li [] [ text feature ]) features)
 
 
 viewInput : String -> String -> String -> (String -> msg) -> Html msg

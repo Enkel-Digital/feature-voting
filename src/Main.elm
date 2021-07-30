@@ -19,17 +19,28 @@ main =
 -- MODEL
 
 
+type alias Feature =
+    { title : String
+    , description : String
+    }
+
+
 type alias Model =
     { name : String
     , password : String
     , passwordAgain : String
-    , features : List String
+    , features : List Feature
     }
 
 
 init : Model
 init =
-    Model "" "" "" [ "faster loading time", "search for item using itemID too" ]
+    Model ""
+        ""
+        ""
+        [ { title = "faster loading time", description = "right now the first load takes very long" }
+        , { title = "search for item using itemID too", description = "right now can only search using item name and not item ID" }
+        ]
 
 
 
@@ -72,10 +83,19 @@ view model =
         ]
 
 
-viewFeatures : List String -> Html msg
+viewFeatures : List Feature -> Html msg
 viewFeatures features =
-    ol []
-        (List.map (\feature -> li [] [ text feature ]) features)
+    ul []
+        (List.map (\feature -> li [] [ viewFeature feature ]) features)
+
+
+viewFeature : Feature -> Html msg
+viewFeature feature =
+    div []
+        [ text feature.title
+        , hr [] []
+        , text feature.description
+        ]
 
 
 viewInput : String -> String -> String -> (String -> msg) -> Html msg

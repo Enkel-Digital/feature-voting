@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Browser
 import Debug exposing (toString)
@@ -6,6 +6,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput)
 import Select exposing (fromValuesWithLabels)
+import Time
 
 
 
@@ -25,6 +26,7 @@ type alias Feature =
     { title : String
     , description : String
     , points : Int
+    , createdAt : Time.Posix
     }
 
 
@@ -36,7 +38,7 @@ type alias Model =
 
 defaultNewFeature : Feature
 defaultNewFeature =
-    { title = "", description = "", points = 0 }
+    { title = "", description = "", points = 0, createdAt = Time.millisToPosix 0 }
 
 
 init : Model
@@ -44,8 +46,8 @@ init =
     { newFeature = defaultNewFeature
     , -- Scaffolded values to test UI
       features =
-        [ { title = "faster loading time", description = "right now the first load takes very long", points = 0 }
-        , { title = "search for item using itemID too", description = "right now can only search using item name and not item ID", points = 2 }
+        [ { title = "faster loading time", description = "right now the first load takes very long", points = 0, createdAt = Time.millisToPosix 1627985070000 }
+        , { title = "search for item using itemID too", description = "right now can only search using item name and not item ID", points = 2, createdAt = Time.millisToPosix 1627975070000 }
         ]
     }
 
@@ -164,10 +166,26 @@ viewFeature : Feature -> Html msg
 viewFeature feature =
     div []
         [ p [] [ text (toString feature.points ++ " points") ]
+        , p [] [ text (viewDateTimeString feature.createdAt) ]
         , text feature.title
         , hr [] []
         , text feature.description
         ]
+
+
+viewDateTimeString : Time.Posix -> String
+viewDateTimeString time =
+    String.fromInt (Time.toDay Time.utc time)
+        ++ " "
+        ++ toString (Time.toMonth Time.utc time)
+        ++ " "
+        ++ String.fromInt (Time.toYear Time.utc time)
+        ++ ", "
+        ++ toString (Time.toWeekday Time.utc time)
+        ++ " "
+        ++ String.fromInt (Time.toHour Time.utc time)
+        ++ ":"
+        ++ String.fromInt (Time.toMinute Time.utc time)
 
 
 viewInput : String -> String -> String -> (String -> msg) -> Html msg

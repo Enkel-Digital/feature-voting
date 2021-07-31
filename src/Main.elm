@@ -34,9 +34,14 @@ type alias Model =
     }
 
 
+defaultNewFeature : Feature
+defaultNewFeature =
+    { title = "", description = "", points = 0 }
+
+
 init : Model
 init =
-    { newFeature = { title = "", description = "", points = 0 }
+    { newFeature = defaultNewFeature
     , -- Scaffolded values to test UI
       features =
         [ { title = "faster loading time", description = "right now the first load takes very long", points = 0 }
@@ -56,7 +61,7 @@ type Msg
     | SetTitle String
     | SetDescription String
     | SetPoints Int
-      -- Create a new feature and append into model
+      -- Create a new feature and append into model before clearing the new feature input form
     | NewFeature
 
 
@@ -122,7 +127,7 @@ update msg model =
             }
 
         NewFeature ->
-            { model | features = model.newFeature :: model.features }
+            { model | features = model.newFeature :: model.features, newFeature = defaultNewFeature }
 
 
 

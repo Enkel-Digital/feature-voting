@@ -29,22 +29,20 @@ type alias Feature =
 
 
 type alias Model =
-    { name : String
-    , password : String
-    , passwordAgain : String
+    { newFeature : Feature
     , features : List Feature
     }
 
 
 init : Model
 init =
-    Model ""
-        ""
-        ""
-        -- Scaffolded values to test UI
+    { newFeature = { title = "", description = "", points = 0 }
+    , -- Scaffolded values to test UI
+      features =
         [ { title = "faster loading time", description = "right now the first load takes very long", points = 0 }
         , { title = "search for item using itemID too", description = "right now can only search using item name and not item ID", points = 2 }
         ]
+    }
 
 
 
@@ -52,10 +50,14 @@ init =
 
 
 type Msg
-    = Name String
-    | Password String
-    | PasswordAgain String
-    | SortFeatures SortMethod
+    = -- Sort the features by a given sort method
+      SortFeatures SortMethod
+      -- Set values of input into model for new feature
+    | SetTitle String
+    | SetDescription String
+    | SetPoints Int
+      -- Create a new feature and append into model
+    | NewFeature
 
 
 type SortMethod
@@ -69,14 +71,35 @@ type SortMethod
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Name name ->
-            { model | name = name }
+        SetTitle title ->
+            let
+                newFeature_ =
+                    model.newFeature
 
-        Password password ->
-            { model | password = password }
+                newFeature =
+                    { newFeature_ | title = title }
+            in
+            { model | newFeature = newFeature }
 
-        PasswordAgain password ->
-            { model | passwordAgain = password }
+        SetDescription description ->
+            let
+                newFeature_ =
+                    model.newFeature
+
+                newFeature =
+                    { newFeature_ | description = description }
+            in
+            { model | newFeature = newFeature }
+
+        SetPoints points ->
+            let
+                newFeature_ =
+                    model.newFeature
+
+                newFeature =
+                    { newFeature_ | points = points }
+            in
+            { model | newFeature = newFeature }
 
         SortFeatures sortMethod ->
             { model
@@ -98,6 +121,9 @@ update msg model =
                             Debug.todo "Not yet implemented"
             }
 
+        NewFeature ->
+            { model | features = model.newFeature :: model.features }
+
 
 
 -- VIEW
@@ -117,10 +143,9 @@ view model =
             SortByUnsorted
             SortFeatures
         , viewFeatures model.features
-        , viewInput "text" "Name" model.name Name
-        , viewInput "password" "Password" model.password Password
-        , viewInput "password" "Re-enter Password" model.passwordAgain PasswordAgain
-        , viewValidation model
+        , viewInput "text" "Title" model.newFeature.title SetTitle
+        , viewInput "text" "Description" model.newFeature.description SetDescription
+        , button [ Html.Events.onClick NewFeature ] [ text "new" ]
         ]
 
 
@@ -143,12 +168,3 @@ viewFeature feature =
 viewInput : String -> String -> String -> (String -> msg) -> Html msg
 viewInput t p v toMsg =
     input [ type_ t, placeholder p, value v, onInput toMsg ] []
-
-
-viewValidation : Model -> Html msg
-viewValidation model =
-    if model.password == model.passwordAgain then
-        div [ style "color" "green" ] [ text "OK" ]
-
-    else
-        div [ style "color" "red" ] [ text "Passwords do not match!" ]

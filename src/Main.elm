@@ -122,10 +122,10 @@ update msg model =
                             List.sortBy .points model.features
 
                         SortByTimeLatest ->
-                            Debug.todo "Not yet implemented"
+                            List.reverse (List.sortBy (\feature -> Time.posixToMillis feature.createdAt) model.features)
 
                         SortByTimeOldest ->
-                            Debug.todo "Not yet implemented"
+                            List.sortBy (\feature -> Time.posixToMillis feature.createdAt) model.features
             }
 
         NewFeature ->

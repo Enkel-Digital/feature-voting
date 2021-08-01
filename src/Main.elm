@@ -39,7 +39,6 @@ type alias Feature =
 type alias Model =
     { newFeature : Feature
     , features : List Feature
-    , time : Maybe Time.Posix
     }
 
 
@@ -56,7 +55,6 @@ init =
         [ { title = "faster loading time", description = "right now the first load takes very long", points = 0, createdAt = Time.millisToPosix 1627985070000 }
         , { title = "search for item using itemID too", description = "right now can only search using item name and not item ID", points = 2, createdAt = Time.millisToPosix 1627975070000 }
         ]
-    , time = Nothing
     }
 
 
@@ -71,10 +69,10 @@ type Msg
     | SetTitle String
     | SetDescription String
     | SetPoints Int
-      -- Create a new feature and append into model before clearing the new feature input form
-    | NewFeature
-    | NewTime Time.Posix
-    | GetCurrentTime
+      -- Use CreateNewFeature to trigger a command, to get runtime to call NewFeature with current time
+      -- NewFeature then use current time and newFeature field in model to create a new feature and append into model.features before clearing the new feature input form
+    | CreateNewFeature
+    | NewFeature Time.Posix
 
 
 type SortMethod
@@ -140,14 +138,18 @@ update msg model =
             , Cmd.none
             )
 
-        NewFeature ->
-            ( { model | features = model.newFeature :: model.features, newFeature = defaultNewFeature }, Cmd.none )
+        CreateNewFeature ->
+            ( model, Task.perform NewFeature Time.now )
 
-        NewTime time ->
-            ( { model | time = Just time }, Cmd.none )
+        NewFeature time ->
+            let
+                newFeature_ =
+                    model.newFeature
 
-        GetCurrentTime ->
-            ( model, Task.perform NewTime Time.now )
+                newFeature =
+                    { newFeature_ | createdAt = time }
+            in
+            ( { model | features = newFeature :: model.features, newFeature = defaultNewFeature }, Cmd.none )
 
 
 
@@ -179,14 +181,7 @@ view model =
         , viewFeatures model.features
         , viewInput "text" "Title" model.newFeature.title SetTitle
         , viewInput "text" "Description" model.newFeature.description SetDescription
-        , button [ Html.Events.onClick NewFeature ] [ text "new" ]
-        , button [ Html.Events.onClick GetCurrentTime ] [ Html.text "Get now time." ]
-        , case model.time of
-            Nothing ->
-                Html.text "Empty message."
-
-            Just t ->
-                Html.text (toString t)
+        , button [ Html.Events.onClick CreateNewFeature ] [ text "New" ]
         ]
 
 

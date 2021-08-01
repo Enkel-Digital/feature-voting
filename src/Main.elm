@@ -6,6 +6,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput)
 import Select exposing (fromValuesWithLabels)
+import Task
 import Time
 
 
@@ -15,7 +16,12 @@ import Time
 
 main : Program () Model Msg
 main =
-    Browser.sandbox { init = init, update = update, view = view }
+    Browser.element
+        { init = \_ -> ( init, Cmd.none )
+        , update = update
+        , view = view
+        , subscriptions = subscriptions
+        }
 
 
 
@@ -33,6 +39,7 @@ type alias Feature =
 type alias Model =
     { newFeature : Feature
     , features : List Feature
+    , time : Maybe Time.Posix
     }
 
 
@@ -49,6 +56,7 @@ init =
         [ { title = "faster loading time", description = "right now the first load takes very long", points = 0, createdAt = Time.millisToPosix 1627985070000 }
         , { title = "search for item using itemID too", description = "right now can only search using item name and not item ID", points = 2, createdAt = Time.millisToPosix 1627975070000 }
         ]
+    , time = Nothing
     }
 
 
@@ -65,6 +73,8 @@ type Msg
     | SetPoints Int
       -- Create a new feature and append into model before clearing the new feature input form
     | NewFeature
+    | NewTime Time.Posix
+    | GetCurrentTime
 
 
 type SortMethod
@@ -75,7 +85,7 @@ type SortMethod
     | SortByTimeOldest
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SetTitle title ->
@@ -86,7 +96,7 @@ update msg model =
                 newFeature =
                     { newFeature_ | title = title }
             in
-            { model | newFeature = newFeature }
+            ( { model | newFeature = newFeature }, Cmd.none )
 
         SetDescription description ->
             let
@@ -96,7 +106,7 @@ update msg model =
                 newFeature =
                     { newFeature_ | description = description }
             in
-            { model | newFeature = newFeature }
+            ( { model | newFeature = newFeature }, Cmd.none )
 
         SetPoints points ->
             let
@@ -106,10 +116,10 @@ update msg model =
                 newFeature =
                     { newFeature_ | points = points }
             in
-            { model | newFeature = newFeature }
+            ( { model | newFeature = newFeature }, Cmd.none )
 
         SortFeatures sortMethod ->
-            { model
+            ( { model
                 | features =
                     case sortMethod of
                         SortByUnsorted ->
@@ -126,10 +136,27 @@ update msg model =
 
                         SortByTimeOldest ->
                             List.sortBy (\feature -> Time.posixToMillis feature.createdAt) model.features
-            }
+              }
+            , Cmd.none
+            )
 
         NewFeature ->
-            { model | features = model.newFeature :: model.features, newFeature = defaultNewFeature }
+            ( { model | features = model.newFeature :: model.features, newFeature = defaultNewFeature }, Cmd.none )
+
+        NewTime time ->
+            ( { model | time = Just time }, Cmd.none )
+
+        GetCurrentTime ->
+            ( model, Task.perform NewTime Time.now )
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.none
 
 
 
@@ -153,6 +180,13 @@ view model =
         , viewInput "text" "Title" model.newFeature.title SetTitle
         , viewInput "text" "Description" model.newFeature.description SetDescription
         , button [ Html.Events.onClick NewFeature ] [ text "new" ]
+        , button [ Html.Events.onClick GetCurrentTime ] [ Html.text "Get now time." ]
+        , case model.time of
+            Nothing ->
+                Html.text "Empty message."
+
+            Just t ->
+                Html.text (toString t)
         ]
 
 

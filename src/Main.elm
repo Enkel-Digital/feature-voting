@@ -123,7 +123,19 @@ update msg model =
                     model.newFeature
 
                 newFeature =
-                    { newFeature_ | points = points }
+                    { newFeature_
+                        | -- Force points to always be at least 1
+                          -- Force points to be at most user's points left
+                          points =
+                            if points < 1 then
+                                1
+
+                            else if points > model.user.pointsLeft then
+                                model.user.pointsLeft
+
+                            else
+                                points
+                    }
             in
             ( { model | newFeature = newFeature }, Cmd.none )
 

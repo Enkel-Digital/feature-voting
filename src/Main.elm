@@ -179,10 +179,7 @@ view model =
             SortByUnsorted
             SortFeatures
         , viewFeatures model.features
-        , viewInput "text" (Just "Title") model.newFeature.title SetTitle
-        , viewInput "text" (Just "Description") model.newFeature.description SetDescription
-        , viewInput "number" Nothing (toString model.newFeature.points) (SetPoints << Maybe.withDefault 1 << String.toInt)
-        , button [ Html.Events.onClick CreateNewFeature ] [ text "New" ]
+        , viewCreateNewFeature model.newFeature
         ]
 
 
@@ -200,6 +197,16 @@ viewFeature feature =
         , text feature.title
         , hr [] []
         , text feature.description
+        ]
+
+
+viewCreateNewFeature : Feature -> Html Msg
+viewCreateNewFeature newFeature =
+    div []
+        [ viewInput "text" (Just "Title") newFeature.title SetTitle
+        , viewInput "text" (Just "Description") newFeature.description SetDescription
+        , viewInput "number" Nothing (toString newFeature.points) (SetPoints << Maybe.withDefault 1 << String.toInt)
+        , button [ Html.Events.onClick CreateNewFeature ] [ text "New" ]
         ]
 
 

@@ -36,9 +36,16 @@ type alias Feature =
     }
 
 
+type alias User =
+    { name : String
+    , pointsLeft : Int
+    }
+
+
 type alias Model =
     { newFeature : Feature
     , features : List Feature
+    , user : User
     }
 
 
@@ -50,11 +57,15 @@ defaultNewFeature =
 init : Model
 init =
     { newFeature = defaultNewFeature
-    , -- Scaffolded values to test UI
-      features =
+
+    -- Scaffolded values to test UI
+    , features =
         [ { title = "faster loading time", description = "right now the first load takes very long", points = 0, createdAt = Time.millisToPosix 1627985070000 }
         , { title = "search for item using itemID too", description = "right now can only search using item name and not item ID", points = 2, createdAt = Time.millisToPosix 1627975070000 }
         ]
+
+    -- Scaffolded values to test UI
+    , user = { name = "JJ", pointsLeft = 10 }
     }
 
 
@@ -180,6 +191,7 @@ view model =
             SortFeatures
         , viewFeatures model.features
         , viewCreateNewFeature model.newFeature
+        , viewUser model.user
         ]
 
 
@@ -228,3 +240,11 @@ viewDateTimeString time =
 viewInput : String -> Maybe String -> String -> (String -> Msg) -> Html Msg
 viewInput t p v toMsg =
     input [ type_ t, placeholder (Maybe.withDefault "" p), value v, onInput toMsg ] []
+
+
+viewUser : User -> Html Msg
+viewUser user =
+    div []
+        [ p [] [ text user.name ]
+        , p [] [ text ("Points Left: " ++ String.fromInt user.pointsLeft) ]
+        ]

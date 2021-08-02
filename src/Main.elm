@@ -36,6 +36,11 @@ type alias Feature =
     }
 
 
+type Error
+    = MissingTitle
+    | NotEnoughPoints
+
+
 type alias User =
     { name : String
     , pointsLeft : Int
@@ -46,6 +51,7 @@ type alias Model =
     { newFeature : Feature
     , features : List Feature
     , user : User
+    , error : Maybe Error
     }
 
 
@@ -56,7 +62,8 @@ defaultNewFeature =
 
 init : Model
 init =
-    { newFeature = defaultNewFeature
+    { error = Nothing
+    , newFeature = defaultNewFeature
 
     -- Scaffolded values to test UI
     , features =
@@ -99,23 +106,17 @@ update msg model =
     case msg of
         SetTitle title ->
             let
-                newFeature_ =
-                    model.newFeature
-
                 newFeature =
-                    { newFeature_ | title = title }
+                    model.newFeature
             in
-            ( { model | newFeature = newFeature }, Cmd.none )
+            ( { model | newFeature = { newFeature | title = title } }, Cmd.none )
 
         SetDescription description ->
             let
-                newFeature_ =
-                    model.newFeature
-
                 newFeature =
-                    { newFeature_ | description = description }
+                    model.newFeature
             in
-            ( { model | newFeature = newFeature }, Cmd.none )
+            ( { model | newFeature = { newFeature | description = description } }, Cmd.none )
 
         SetPoints points ->
             let
@@ -166,13 +167,26 @@ update msg model =
 
         NewFeature time ->
             let
-                newFeature_ =
-                    model.newFeature
-
                 newFeature =
-                    { newFeature_ | createdAt = time }
+                    model.newFeature
             in
-            ( { model | features = newFeature :: model.features, newFeature = defaultNewFeature }, Cmd.none )
+            ( if newFeature.points > model.user.pointsLeft then
+                { model | error = Just NotEnoughPoints }
+
+              else if String.isEmpty newFeature.title then
+                { model | error = Just MissingTitle }
+
+              else
+                -- Add new feature to features list if no errors
+                { model
+                    | features = { newFeature | createdAt = time } :: model.features
+                    , newFeature = defaultNewFeature
+
+                    -- Reset error just in case it was set
+                    , error = Nothing
+                }
+            , Cmd.none
+            )
 
 
 
@@ -191,7 +205,8 @@ subscriptions _ =
 view : Model -> Html Msg
 view model =
     div []
-        [ h1 [] [ text "All features" ]
+        [ viewModal model.error
+        , h1 [] [ text "All features" ]
         , fromValuesWithLabels
             [ ( SortByUnsorted, "-- Sort --" )
             , ( SortByVotesMost, "Votes (Most)" )
@@ -205,6 +220,16 @@ view model =
         , viewCreateNewFeature model.newFeature
         , viewUser model.user
         ]
+
+
+viewModal : Maybe Error -> Html Msg
+viewModal maybeError =
+    case maybeError of
+        Just error ->
+            text "error"
+
+        Nothing ->
+            text ""
 
 
 viewFeatures : List Feature -> Html Msg

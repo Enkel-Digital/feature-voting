@@ -183,13 +183,13 @@ view model =
         ]
 
 
-viewFeatures : List Feature -> Html msg
+viewFeatures : List Feature -> Html Msg
 viewFeatures features =
     ul []
         (List.map (\feature -> li [] [ viewFeature feature ]) features)
 
 
-viewFeature : Feature -> Html msg
+viewFeature : Feature -> Html Msg
 viewFeature feature =
     div []
         [ p [] [ text (toString feature.points ++ " points") ]
@@ -225,6 +225,6 @@ viewDateTimeString time =
         ++ String.fromInt (Time.toMinute Time.utc time)
 
 
-viewInput : String -> Maybe String -> String -> (String -> msg) -> Html msg
+viewInput : String -> Maybe String -> String -> (String -> Msg) -> Html Msg
 viewInput t p v toMsg =
     input [ type_ t, placeholder (Maybe.withDefault "" p), value v, onInput toMsg ] []

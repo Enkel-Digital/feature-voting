@@ -44,7 +44,7 @@ type alias Model =
 
 defaultNewFeature : Feature
 defaultNewFeature =
-    { title = "", description = "", points = 0, createdAt = Time.millisToPosix 0 }
+    { title = "", description = "", points = 1, createdAt = Time.millisToPosix 0 }
 
 
 init : Model
@@ -179,8 +179,9 @@ view model =
             SortByUnsorted
             SortFeatures
         , viewFeatures model.features
-        , viewInput "text" "Title" model.newFeature.title SetTitle
-        , viewInput "text" "Description" model.newFeature.description SetDescription
+        , viewInput "text" (Just "Title") model.newFeature.title SetTitle
+        , viewInput "text" (Just "Description") model.newFeature.description SetDescription
+        , viewInput "number" Nothing (toString model.newFeature.points) (SetPoints << Maybe.withDefault 1 << String.toInt)
         , button [ Html.Events.onClick CreateNewFeature ] [ text "New" ]
         ]
 
@@ -217,6 +218,6 @@ viewDateTimeString time =
         ++ String.fromInt (Time.toMinute Time.utc time)
 
 
-viewInput : String -> String -> String -> (String -> msg) -> Html msg
+viewInput : String -> Maybe String -> String -> (String -> msg) -> Html msg
 viewInput t p v toMsg =
-    input [ type_ t, placeholder p, value v, onInput toMsg ] []
+    input [ type_ t, placeholder (Maybe.withDefault "" p), value v, onInput toMsg ] []

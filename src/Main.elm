@@ -49,10 +49,13 @@ type alias User =
 
 
 type alias Model =
-    { newFeature : Feature
+    { error : Maybe Error
+    , newFeature : Feature
     , features : List Feature
     , user : User
-    , error : Maybe Error
+
+    -- Points to vote for an existing feature
+    , pointsToVote : Int
     }
 
 
@@ -74,6 +77,9 @@ init =
 
     -- Scaffolded values to test UI
     , user = { name = "JJ", pointsLeft = 10 }
+
+    -- By default each vote uses 1 point
+    , pointsToVote = 1
     }
 
 
@@ -94,6 +100,9 @@ type Msg
       -- NewFeature then use current time and newFeature field in model to create a new feature and append into model.features before clearing the new feature input form
     | CreateNewFeature
     | NewFeature Time.Posix
+      -- Set how much points, and vote for an existing feature
+    | SetPointsToVote Int
+    | VoteForFeature
 
 
 type SortMethod
@@ -197,6 +206,26 @@ update msg model =
             , Cmd.none
             )
 
+        SetPointsToVote points ->
+            ( { model
+                | -- Force points to always be at least 1
+                  -- Force points to be at most user's points left
+                  pointsToVote =
+                    if points < 1 then
+                        1
+
+                    else if points > model.user.pointsLeft then
+                        model.user.pointsLeft
+
+                    else
+                        points
+              }
+            , Cmd.none
+            )
+
+        VoteForFeature ->
+            ( model, Cmd.none )
+
 
 
 -- SUBSCRIPTIONS
@@ -216,6 +245,18 @@ view model =
     div []
         [ viewModal model.error
         , h1 [] [ text "All features" ]
+
+        -- , select
+        --     [ onInput (\t -> SortFeatures VotesMost) ]
+        --     [ optgroup [ Html.Attributes.attribute "label" "By Votes" ]
+        --         [ viewOption VotesMost option [] [ "Votes (Most)" ]
+        --         , viewOption VotesLeast option [] [ "Votes (Least)" ]
+        --         ]
+        --     , optgroup [ Html.Attributes.attribute "label" "By Time" ]
+        --         [ viewOption TimeLatest option [] [ "Time (Latest)" ]
+        --         , viewOption TimeOldest option [] [ "Time (Oldest)" ]
+        --         ]
+        --     ]
         , fromValuesWithLabels
             [ ( SortByUnsorted, "-- Sort --" )
             , ( SortByVotesMost, "Votes (Most)" )
@@ -258,6 +299,8 @@ viewModal maybeError =
                     , style "width" "60vw"
                     , style "display" "flex"
                     , style "flex-direction" "column"
+
+                    -- , style "align-items" "center"
                     , style "justify-content" "center"
                     , style "padding" "2em"
                     ]
@@ -286,6 +329,9 @@ viewFeature : Feature -> Html Msg
 viewFeature feature =
     div []
         [ p [] [ text (toString feature.points ++ " points") ]
+        -- @todo Should be in another view, when clicked into a feature to see more then can vote for it. If not all the features will have the same input value going up as you click a single one
+        -- , viewInput "number" Nothing (toString model.pointsToVote) (SetPointsToVote << Maybe.withDefault 1 << String.toInt)
+        -- , button [ Html.Events.onClick VoteForFeature ] [ text "Vote" ]
         , p [] [ text (viewDateTimeString feature.createdAt) ]
         , text feature.title
         , hr [] []

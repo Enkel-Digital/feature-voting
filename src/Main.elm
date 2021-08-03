@@ -5,6 +5,7 @@ import Debug exposing (toString)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput)
+import Json.Decode as Decode
 import Select exposing (fromValuesWithLabels)
 import Task
 import Time
@@ -81,8 +82,10 @@ init =
 
 
 type Msg
-    = -- Sort the features by a given sort method
-      SortFeatures SortMethod
+    = NoOp
+    | ClearError
+      -- Sort the features by a given sort method
+    | SortFeatures SortMethod
       -- Set values of input into model for new feature
     | SetTitle String
     | SetDescription String
@@ -104,6 +107,12 @@ type SortMethod
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
+        ClearError ->
+            ( { model | error = Nothing }, Cmd.none )
+
         SetTitle title ->
             let
                 newFeature =

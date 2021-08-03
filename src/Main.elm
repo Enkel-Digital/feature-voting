@@ -30,7 +30,8 @@ main =
 
 
 type alias Feature =
-    { title : String
+    { id : Int
+    , title : String
     , description : String
     , points : Int
     , createdAt : Time.Posix
@@ -61,7 +62,7 @@ type alias Model =
 
 defaultNewFeature : Feature
 defaultNewFeature =
-    { title = "", description = "", points = 1, createdAt = Time.millisToPosix 0 }
+    { id = 0, title = "", description = "", points = 1, createdAt = Time.millisToPosix 0 }
 
 
 init : Model
@@ -71,8 +72,8 @@ init =
 
     -- Scaffolded values to test UI
     , features =
-        [ { title = "faster loading time", description = "right now the first load takes very long", points = 0, createdAt = Time.millisToPosix 1627985070000 }
-        , { title = "search for item using itemID too", description = "right now can only search using item name and not item ID", points = 2, createdAt = Time.millisToPosix 1627975070000 }
+        [ { id = 1, title = "faster loading time", description = "right now the first load takes very long", points = 0, createdAt = Time.millisToPosix 1627985070000 }
+        , { id = 2, title = "search for item using itemID too", description = "right now can only search using item name and not item ID", points = 2, createdAt = Time.millisToPosix 1627975070000 }
         ]
 
     -- Scaffolded values to test UI
@@ -102,7 +103,7 @@ type Msg
     | NewFeature Time.Posix
       -- Set how much points, and vote for an existing feature
     | SetPointsToVote Int
-    | VoteForFeature
+    | VoteForFeature Int
 
 
 type SortMethod
@@ -223,8 +224,29 @@ update msg model =
             , Cmd.none
             )
 
-        VoteForFeature ->
-            ( model, Cmd.none )
+        VoteForFeature featureID ->
+            let
+                featureToVoteFor =
+                    case
+                        model.features
+                            |> List.filter (\feature -> feature.id == featureID)
+                            |> List.head
+                    of
+                        Nothing ->
+                            Debug.todo "@todo IMPOSSIBLE state ... how to not even be here???"
+
+                        Just feature ->
+                            feature
+            in
+            ( { model
+                | -- Reset back to default of 1
+                  pointsToVote = 1
+
+                -- @todo Cannot do like this, need to remove the original one or replace it instead of just adding a new one
+                , features = { featureToVoteFor | points = featureToVoteFor.points + model.pointsToVote } :: model.features
+              }
+            , Cmd.none
+            )
 
 
 
@@ -329,6 +351,7 @@ viewFeature : Feature -> Html Msg
 viewFeature feature =
     div []
         [ p [] [ text (toString feature.points ++ " points") ]
+
         -- @todo Should be in another view, when clicked into a feature to see more then can vote for it. If not all the features will have the same input value going up as you click a single one
         -- , viewInput "number" Nothing (toString model.pointsToVote) (SetPointsToVote << Maybe.withDefault 1 << String.toInt)
         -- , button [ Html.Events.onClick VoteForFeature ] [ text "Vote" ]

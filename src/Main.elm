@@ -226,10 +226,45 @@ viewModal : Maybe Error -> Html Msg
 viewModal maybeError =
     case maybeError of
         Just error ->
-            text "error"
+            -- Error modal is made of container that covers the whole screen in grey overlay, and a inner white box in the middle of screen
+            div
+                [ Html.Events.onClick ClearError
+                , style "position" "absolute"
+                , style "top" "0"
+                , style "bottom" "0"
+                , style "right" "0"
+                , style "left" "0"
+                , style "display" "flex"
+                , style "align-items" "center"
+                , style "justify-content" "center"
+                , style "background-color" "rgba(40, 40, 40, 0.3)"
+                ]
+                [ div
+                    [ onClickStopPropagation NoOp
+                    , style "border-style" "solid"
+                    , style "border-radius" "3px"
+                    , style "border-color" "white"
+                    , style "background-color" "white"
+                    , style "height" "50vh"
+                    , style "width" "60vw"
+                    , style "display" "flex"
+                    , style "flex-direction" "column"
+                    , style "justify-content" "center"
+                    , style "padding" "2em"
+                    ]
+                    [ span [] [ text ("Error: " ++ toString error) ]
+                    , br [] []
+                    , button [ Html.Events.onClick ClearError ] [ text "Ok" ]
+                    ]
+                ]
 
         Nothing ->
             text ""
+
+
+onClickStopPropagation : msg -> Html.Attribute msg
+onClickStopPropagation msg =
+    Html.Events.stopPropagationOn "click" <| Decode.succeed ( msg, True )
 
 
 viewFeatures : List Feature -> Html Msg

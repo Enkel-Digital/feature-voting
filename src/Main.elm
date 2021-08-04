@@ -39,6 +39,13 @@ type alias Feature =
     }
 
 
+type SortMethod
+    = SortByVotesMost
+    | SortByVotesLeast
+    | SortByTimeLatest
+    | SortByTimeOldest
+
+
 type Error
     = MissingTitle
     | NotEnoughPoints
@@ -54,6 +61,7 @@ type alias Model =
     { error : Maybe Error
     , newFeature : Feature
     , features : Dict Int Feature
+    , sortMethod : SortMethod
     , user : User
 
     -- Points to vote for an existing feature
@@ -77,6 +85,7 @@ init =
             [ ( 1, { id = 1, title = "faster loading time", description = "right now the first load takes very long", points = 0, createdAt = Time.millisToPosix 1627985070000 } )
             , ( 2, { id = 2, title = "search for item using itemID too", description = "right now can only search using item name and not item ID", points = 2, createdAt = Time.millisToPosix 1627975070000 } )
             ]
+    , sortMethod = SortByVotesMost
 
     -- Scaffolded values to test UI
     , user = { name = "JJ", pointsLeft = 10 }
@@ -94,7 +103,7 @@ type Msg
     = NoOp
     | ClearError
       -- Sort the features by a given sort method
-    | SortFeatures SortMethod
+    | ChangeSortMethod SortMethod
       -- Set values of input into model for new feature
     | SetTitle String
     | SetDescription String
@@ -102,18 +111,10 @@ type Msg
       -- Use CreateNewFeature to trigger a command, to get runtime to call NewFeature with current time
       -- NewFeature then use current time and newFeature field in model to create a new feature and append into model.features before clearing the new feature input form
     | CreateNewFeature
-    | NewFeature Time.Posix
+    | NewFeature Int Time.Posix
       -- Set how much points, and vote for an existing feature
     | SetPointsToVote Int
     | VoteForFeature Int
-
-
-type SortMethod
-    = SortByUnsorted
-    | SortByVotesMost
-    | SortByVotesLeast
-    | SortByTimeLatest
-    | SortByTimeOldest
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -161,27 +162,8 @@ update msg model =
             in
             ( { model | newFeature = newFeature }, Cmd.none )
 
-        SortFeatures sortMethod ->
-            ( { model
-                | features =
-                    case sortMethod of
-                        SortByUnsorted ->
-                            model.features
-
-                        SortByVotesMost ->
-                            List.reverse (List.sortBy .points model.features)
-
-                        SortByVotesLeast ->
-                            List.sortBy .points model.features
-
-                        SortByTimeLatest ->
-                            List.reverse (List.sortBy (\feature -> Time.posixToMillis feature.createdAt) model.features)
-
-                        SortByTimeOldest ->
-                            List.sortBy (\feature -> Time.posixToMillis feature.createdAt) model.features
-              }
-            , Cmd.none
-            )
+        ChangeSortMethod sortMethod ->
+            ( { model | sortMethod = sortMethod }, Cmd.none )
 
         CreateNewFeature ->
             ( model, Task.perform NewFeature Time.now )
@@ -263,28 +245,15 @@ view model =
     div []
         [ viewModal model.error
         , h1 [] [ text "All features" ]
-
-        -- , select
-        --     [ onInput (\t -> SortFeatures VotesMost) ]
-        --     [ optgroup [ Html.Attributes.attribute "label" "By Votes" ]
-        --         [ viewOption VotesMost option [] [ "Votes (Most)" ]
-        --         , viewOption VotesLeast option [] [ "Votes (Least)" ]
-        --         ]
-        --     , optgroup [ Html.Attributes.attribute "label" "By Time" ]
-        --         [ viewOption TimeLatest option [] [ "Time (Latest)" ]
-        --         , viewOption TimeOldest option [] [ "Time (Oldest)" ]
-        --         ]
-        --     ]
         , fromValuesWithLabels
-            [ ( SortByUnsorted, "-- Sort --" )
-            , ( SortByVotesMost, "Votes (Most)" )
+            [ ( SortByVotesMost, "Votes (Most)" )
             , ( SortByVotesLeast, "Votes (Least)" )
             , ( SortByTimeLatest, "Time (Latest)" )
             , ( SortByTimeOldest, "Time (Oldest)" )
             ]
-            SortByUnsorted
-            SortFeatures
-        , viewFeatures model.features
+            SortByVotesMost
+            ChangeSortMethod
+        , viewFeatures model
         , viewCreateNewFeature model.newFeature
         , viewUser model.user
         ]
@@ -337,10 +306,34 @@ onClickStopPropagation msg =
     Html.Events.stopPropagationOn "click" <| Decode.succeed ( msg, True )
 
 
-viewFeatures : List Feature -> Html Msg
-viewFeatures features =
+viewFeatures : Model -> Html Msg
+viewFeatures model =
     ul []
-        (List.map (\feature -> li [] [ viewFeature feature ]) features)
+        (List.map (\feature -> li [] [ viewFeature feature ])
+            (case model.sortMethod of
+                SortByVotesMost ->
+                    model.features
+                        |> Dict.values
+                        |> List.sortBy .points
+                        |> List.reverse
+
+                SortByVotesLeast ->
+                    model.features
+                        |> Dict.values
+                        |> List.sortBy .points
+
+                SortByTimeLatest ->
+                    model.features
+                        |> Dict.values
+                        |> List.sortBy (\feature -> Time.posixToMillis feature.createdAt)
+                        |> List.reverse
+
+                SortByTimeOldest ->
+                    model.features
+                        |> Dict.values
+                        |> List.sortBy (\feature -> Time.posixToMillis feature.createdAt)
+            )
+        )
 
 
 viewFeature : Feature -> Html Msg

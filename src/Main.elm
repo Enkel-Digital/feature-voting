@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Debug exposing (toString)
+import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput)
@@ -52,7 +53,7 @@ type alias User =
 type alias Model =
     { error : Maybe Error
     , newFeature : Feature
-    , features : List Feature
+    , features : Dict Int Feature
     , user : User
 
     -- Points to vote for an existing feature
@@ -72,9 +73,10 @@ init =
 
     -- Scaffolded values to test UI
     , features =
-        [ { id = 1, title = "faster loading time", description = "right now the first load takes very long", points = 0, createdAt = Time.millisToPosix 1627985070000 }
-        , { id = 2, title = "search for item using itemID too", description = "right now can only search using item name and not item ID", points = 2, createdAt = Time.millisToPosix 1627975070000 }
-        ]
+        Dict.fromList
+            [ ( 1, { id = 1, title = "faster loading time", description = "right now the first load takes very long", points = 0, createdAt = Time.millisToPosix 1627985070000 } )
+            , ( 2, { id = 2, title = "search for item using itemID too", description = "right now can only search using item name and not item ID", points = 2, createdAt = Time.millisToPosix 1627975070000 } )
+            ]
 
     -- Scaffolded values to test UI
     , user = { name = "JJ", pointsLeft = 10 }
@@ -198,7 +200,7 @@ update msg model =
               else
                 -- Add new feature to features list if no errors
                 { model
-                    | features = { newFeature | createdAt = time } :: model.features
+                    | features = Dict.insert featureID { newFeature | createdAt = time } model.features
                     , newFeature = defaultNewFeature
 
                     -- Reset error just in case it was set
@@ -227,11 +229,7 @@ update msg model =
         VoteForFeature featureID ->
             let
                 featureToVoteFor =
-                    case
-                        model.features
-                            |> List.filter (\feature -> feature.id == featureID)
-                            |> List.head
-                    of
+                    case Dict.get featureID model.features of
                         Nothing ->
                             Debug.todo "@todo IMPOSSIBLE state ... how to not even be here???"
 
@@ -241,9 +239,7 @@ update msg model =
             ( { model
                 | -- Reset back to default of 1
                   pointsToVote = 1
-
-                -- @todo Cannot do like this, need to remove the original one or replace it instead of just adding a new one
-                , features = { featureToVoteFor | points = featureToVoteFor.points + model.pointsToVote } :: model.features
+                , features = Dict.insert featureID { featureToVoteFor | points = featureToVoteFor.points + model.pointsToVote } model.features
               }
             , Cmd.none
             )

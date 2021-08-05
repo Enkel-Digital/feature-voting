@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Main</title>
+
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- https://bulma.io/documentation/overview/start/ -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+
+	<style>
+		body {
+			padding: 0;
+			margin: 0;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="elm-app"></div>
+	<script src="./elm.js"></script>
+	<script>
+		/* const app = */ Elm.Main.init({
+			node: document.getElementById("elm-app")
+		});
+	</script>
+</body>
+
+</html>

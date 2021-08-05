@@ -1,0 +1,24 @@
+{
+  "name": "feature-voting",
+  "version": "0.0.1",
+  "description": "SaaS to vote for features",
+  "main": "./index.html",
+  "scripts": {
+    "serve": "npx elm-live ./src/Main.elm -- --output=elm.js",
+    "format": "npx elm-format ./src/ --yes"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Enkel-Digital/feature-voting.git"
+  },
+  "author": "JJ",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/Enkel-Digital/feature-voting/issues"
+  },
+  "homepage": "https://github.com/Enkel-Digital/feature-voting#readme",
+  "devDependencies": {
+    "elm-format": "^0.8.5",
+    "elm-live": "^4.0.2"
+  }
+}

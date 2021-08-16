@@ -82,8 +82,8 @@ init =
     -- Scaffolded values to test UI
     , features =
         Dict.fromList
-            [ ( 1, { id = 1, title = "faster loading time", description = "right now the first load takes very long", points = 0, createdAt = Time.millisToPosix 1627985070000 } )
-            , ( 2, { id = 2, title = "search for item using itemID too", description = "right now can only search using item name and not item ID", points = 2, createdAt = Time.millisToPosix 1627975070000 } )
+            [ ( 1, { id = 1, title = "Faster loading time", description = "Right now the first load takes very long", points = 0, createdAt = Time.millisToPosix 1627985070000 } )
+            , ( 2, { id = 2, title = "Search for item using itemID too", description = "Right now can only search using item name and not item ID", points = 2, createdAt = Time.millisToPosix 1627975070000 } )
             ]
     , sortMethod = SortByVotesMost
 
@@ -242,19 +242,29 @@ subscriptions _ =
 
 view : Model -> Html Msg
 view model =
-    div []
+    div [ class "my-4 mx-4" ]
         [ viewModal model.error
-        , h1 [] [ text "All features" ]
-        , fromValuesWithLabels
-            [ ( SortByVotesMost, "Votes (Most)" )
-            , ( SortByVotesLeast, "Votes (Least)" )
-            , ( SortByTimeLatest, "Time (Latest)" )
-            , ( SortByTimeOldest, "Time (Oldest)" )
+
+        -- Features
+        , div [ class "content" ]
+            [ h1 [ class "title" ] [ text "Features" ]
+            , div [ class "select" ]
+                [ fromValuesWithLabels
+                    [ ( SortByVotesMost, "Votes (Most)" )
+                    , ( SortByVotesLeast, "Votes (Least)" )
+                    , ( SortByTimeLatest, "Time (Latest)" )
+                    , ( SortByTimeOldest, "Time (Oldest)" )
+                    ]
+                    SortByVotesMost
+                    ChangeSortMethod
+                ]
+            , viewFeatures model
             ]
-            SortByVotesMost
-            ChangeSortMethod
-        , viewFeatures model
+
+        -- Create new feature
         , viewCreateNewFeature model.newFeature
+
+        -- User details
         , viewUser model.user
         ]
 
@@ -308,8 +318,8 @@ onClickStopPropagation msg =
 
 viewFeatures : Model -> Html Msg
 viewFeatures model =
-    ul []
-        (List.map (\feature -> li [] [ viewFeature feature ])
+    div []
+        (List.map (\feature -> div [] [ viewFeature feature ])
             (case model.sortMethod of
                 SortByVotesMost ->
                     model.features
@@ -353,11 +363,12 @@ viewFeature feature =
 
 viewCreateNewFeature : Feature -> Html Msg
 viewCreateNewFeature newFeature =
-    div []
-        [ viewInput "text" (Just "Title") newFeature.title SetTitle
+    div [ class "card card-content" ]
+        [ p [ class "subtitle" ] [ text "New Feature" ]
+        , viewInput "text" (Just "Title") newFeature.title SetTitle
         , viewInput "text" (Just "Description") newFeature.description SetDescription
         , viewInput "number" Nothing (toString newFeature.points) (SetPoints << Maybe.withDefault 1 << String.toInt)
-        , button [ Html.Events.onClick CreateNewFeature ] [ text "New" ]
+        , button [ Html.Events.onClick CreateNewFeature, class "button is-light is-success is-fullwidth" ] [ text "New" ]
         ]
 
 
@@ -378,12 +389,17 @@ viewDateTimeString time =
 
 viewInput : String -> Maybe String -> String -> (String -> Msg) -> Html Msg
 viewInput t p v toMsg =
-    input [ type_ t, placeholder (Maybe.withDefault "" p), value v, onInput toMsg ] []
+    div [ class "field is-large" ]
+        [ input [ type_ t, placeholder (Maybe.withDefault "" p), value v, onInput toMsg, class "input" ] []
+        ]
 
 
 viewUser : User -> Html Msg
 viewUser user =
-    div []
+    div [ class "card card-content" ]
         [ p [] [ text user.name ]
-        , p [] [ text ("Points Left: " ++ String.fromInt user.pointsLeft) ]
+        , p []
+            [ b [] [ user.pointsLeft |> String.fromInt |> text ]
+            , text " Points Left"
+            ]
         ]
